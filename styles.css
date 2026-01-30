@@ -4,7 +4,7 @@
 	--primary-hover-color: #3b78cc;
 	--background-color: #f8f9fa;
 	--card-border-radius: 15px;
-	--transition-speed: 0.3s;
+	--transition-speed: 0.2s;
 }
 
 /* Global Styles */
@@ -27,21 +27,16 @@ body {
 	font-size: 0.9em;
 }
 
-.glyph-input-label,
-.conversion-mode-text {
-	font-weight: bold;
-}
-
 /* Card Styles */
 .card {
 	border: none;
 	border-radius: var(--card-border-radius);
-	transition: all var(--transition-speed) ease;
+	transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
 .card:hover {
-	transform: translateY(-5px);
-	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+	transform: translateY(-3px);
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -68,10 +63,6 @@ body {
 .btn-outline-primary:hover {
 	background-color: var(--primary-color);
 	color: white;
-}
-
-#conversionModeButton {
-	transition: all var(--transition-speed) ease;
 }
 
 #darkModeToggle {
@@ -106,6 +97,7 @@ body {
 	overflow-x: auto;
 	padding-bottom: 10px;
 	width: 100%;
+	contain: layout style;
 }
 
 #glyph-output div {
@@ -115,9 +107,9 @@ body {
 	justify-content: center;
 	background-color: #ffffff;
 	border-radius: 8px;
-	transition: all 0.2s ease;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
 	cursor: pointer;
-	box-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 	position: relative;
 	font-size: 16px;
 	background-repeat: no-repeat;
@@ -126,9 +118,9 @@ body {
 }
 
 #glyph-output div:hover {
-	transform: scale(1.1);
+	transform: scale(1.08);
 	z-index: 1;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 #glyph-output div.transparent {
@@ -147,7 +139,7 @@ body {
 	border-radius: 4px;
 	font-size: 0.75em;
 	opacity: 0;
-	transition: opacity 0.2s, transform 0.2s;
+	transition: opacity 0.15s ease;
 	pointer-events: none;
 	white-space: nowrap;
 	z-index: 1000;
@@ -155,7 +147,6 @@ body {
 
 #glyph-output div:hover .tooltip {
 	opacity: 1;
-	transform: translateX(-50%) translateY(-5px);
 }
 
 /* Copy Notification Styles */
@@ -167,24 +158,7 @@ body {
 	border-radius: 4px;
 	font-size: 0.8em;
 	opacity: 0;
-	transition: opacity 0.3s;
-}
-
-.success-msg {
-	animation: fadeInOut 2s ease-in-out;
-}
-
-@keyframes fadeInOut {
-
-	0%,
-	100% {
-		opacity: 0;
-	}
-
-	10%,
-	90% {
-		opacity: 1;
-	}
+	transition: opacity 0.2s ease;
 }
 
 /* Footer Styles */
@@ -220,22 +194,6 @@ footer a:hover {
 	text-align: center;
 }
 
-/* Mobile Alert Styles */
-#mobileAlert {
-	background-color: rgba(255, 243, 205, 0.9);
-	border: none;
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	margin-bottom: 20px;
-}
-
-#mobileAlert .btn-close {
-	position: absolute;
-	right: 10px;
-	top: 50%;
-	transform: translateY(-50%);
-}
-
 /* Media Queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
@@ -250,22 +208,6 @@ footer a:hover {
 		height: 50px;
 	}
 
-	.input-group {
-		flex-wrap: wrap;
-	}
-
-	#convertButton,
-	#generate-glyph {
-		width: 100%;
-		margin-top: 10px;
-		border-radius: 0.25rem !important;
-	}
-
-	#converterInput,
-	#glyph-input {
-		border-radius: 0.25rem !important;
-	}
-
 	#glyph-output::-webkit-scrollbar {
 		height: 8px;
 	}
@@ -278,24 +220,6 @@ footer a:hover {
 	#glyph-output::-webkit-scrollbar-track {
 		background-color: rgba(0, 0, 0, 0.1);
 	}
-
-	#copyButton {
-		border-top-left-radius: 0 !important;
-		border-bottom-left-radius: 0 !important;
-	}
-
-	.input-group> :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
-		margin-left: 0;
-	}
-
-	#converterInput {
-		border-radius: 0.25rem !important;
-	}
-
-	#inputPrefix {
-		border-radius: 0.25rem !important;
-		margin-bottom: 10px;
-	}
 }
 
 @media (min-width: 768px) {
@@ -303,34 +227,8 @@ footer a:hover {
 		overflow-x: visible;
 	}
 
-	.converter-input-group {
-		display: flex;
-	}
-
-	.converter-input-group .form-control {
-		flex: 1;
-	}
-
-	.converter-input-group .btn {
-		width: 120px;
-	}
-
-	#inputPrefix {
-		width: auto;
-	}
-
 	.glyph-description {
 		padding-right: 1rem;
 		padding-left: 1rem;
-	}
-
-	#converterInput {
-		border-top-left-radius: 0.25rem !important;
-		border-bottom-left-radius: 0.25rem !important;
-	}
-
-	#inputPrefix {
-		border-top-right-radius: 0 !important;
-		border-bottom-right-radius: 0 !important;
 	}
 }
