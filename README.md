@@ -13,4 +13,4 @@ This project is licensed under the GNU General Public License v3.0 (GPL-3.0). Se
 - Original author: [NhanAZ](https://github.com/NhanAZ)  
 - Original repository: [NhanAZ/glyph](https://github.com/NhanAZ/glyph)  
 - Fork: [imluckii](https://github.com/imluckii) — see commits for details.
-- "Pixel Font": 
+- Font: [PixelCode](https://github.com/qwerasd205/PixelCode)
