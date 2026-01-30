@@ -1,13 +1,10 @@
-// Constants
 const GRID = 16;
 
-// Global variables
 let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
-let isDarkMode = false;
+const isDarkMode = true;
 
-// Utility functions
 function showCopyNotification(element) {
 	const notification = element.querySelector('.copy-notification');
 	notification.style.opacity = '1';
@@ -16,28 +13,93 @@ function showCopyNotification(element) {
 	}, 1000);
 }
 
-function toggleDarkMode() {
-	isDarkMode = !isDarkMode;
-	const glyphCard = document.querySelector('.card:has(#glyph-output)');
-	const glyphCardHeader = glyphCard.querySelector('.card-header');
-
-	glyphCard.classList.toggle('dark-mode', isDarkMode);
-	glyphCardHeader.classList.toggle('dark-mode', isDarkMode);
-
-	const darkModeToggle = document.getElementById('darkModeToggle');
-	darkModeToggle.innerHTML = isDarkMode
-		? '<i class="fas fa-sun"></i> Toggle Light Mode'
-		: '<i class="fas fa-moon"></i> Toggle Dark Mode';
-
-	renderGlyphs();
+function getUploadElements() {
+	return {
+		glyphUpload: document.getElementById('glyphUpload'),
+		uploadDropzone: document.getElementById('uploadDropzone'),
+		glyphSuccessMsg: document.getElementById('glyphSuccessMsg'),
+		glyphErrorMsg: document.getElementById('glyphErrorMsg'),
+		uploadMeta: document.getElementById('uploadMeta')
+	};
 }
 
-// Glyph related functions
+function setUploadError(message) {
+	const { glyphSuccessMsg, glyphErrorMsg, uploadMeta } = getUploadElements();
+	if (!glyphSuccessMsg || !glyphErrorMsg) return;
+	glyphSuccessMsg.classList.add('d-none');
+	glyphErrorMsg.textContent = message;
+	glyphErrorMsg.classList.remove('d-none');
+	if (uploadMeta) {
+		uploadMeta.textContent = '';
+		uploadMeta.classList.add('d-none');
+	}
+}
+
+function clearUploadMessages() {
+	const { glyphSuccessMsg, glyphErrorMsg, uploadMeta } = getUploadElements();
+	if (!glyphSuccessMsg || !glyphErrorMsg) return;
+	glyphSuccessMsg.classList.add('d-none');
+	glyphErrorMsg.classList.add('d-none');
+	if (uploadMeta) {
+		uploadMeta.textContent = '';
+		uploadMeta.classList.add('d-none');
+	}
+}
+
+function formatFileSize(bytes) {
+	const units = ['B', 'KB', 'MB', 'GB'];
+	let size = bytes;
+	let unitIndex = 0;
+	while (size >= 1024 && unitIndex < units.length - 1) {
+		size /= 1024;
+		unitIndex += 1;
+	}
+	const display = size >= 10 || unitIndex === 0 ? Math.round(size) : size.toFixed(1);
+	return `${display} ${units[unitIndex]}`;
+}
+
+function isPngFile(file) {
+	if (!file) return false;
+	const isMimePng = file.type === 'image/png';
+	const hasPngExt = file.name.toLowerCase().endsWith('.png');
+	return isMimePng || hasPngExt;
+}
+
+function getThemeValue(variable) {
+	return getComputedStyle(document.body).getPropertyValue(variable).trim();
+}
+
+function applyTheme() {
+	const body = document.body;
+	body.classList.add('dark-mode');
+
+	const glyphCard = document.querySelector('.card:has(#glyph-output)');
+	if (glyphCard) {
+		const glyphCardHeader = glyphCard.querySelector('.card-header');
+		glyphCard.classList.add('dark-mode');
+		if (glyphCardHeader) {
+			glyphCardHeader.classList.add('dark-mode');
+		}
+	}
+
+	if (zoomWindow) {
+		zoomWindow.style.background = getThemeValue('--zoom-bg');
+		zoomWindow.style.border = `1px solid ${getThemeValue('--zoom-border')}`;
+		zoomWindow.style.boxShadow = `0 0 10px ${getThemeValue('--shadow-color')}`;
+	}
+}
+
+function toggleShortcutsHint(forceState = null) {
+	const hint = document.getElementById('shortcutsHint');
+	if (!hint) return;
+	const shouldShow = forceState !== null ? forceState : hint.classList.contains('d-none');
+	hint.classList.toggle('d-none', !shouldShow);
+}
+
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
-	
-	// Use DocumentFragment for better performance
+
 	const fragment = document.createDocumentFragment();
 	const container = document.getElementById('glyph-output');
 
@@ -52,7 +114,7 @@ function Glyph(glyph = "E0") {
 		div.setAttribute('data-hex', `0x${hexCode}`);
 		div.setAttribute('data-char', char);
 		div.setAttribute('data-position', `(${col};${row})`);
-		div.style.color = isDarkMode ? '#ffffff' : '#000000';
+		div.style.color = getThemeValue('--glyph-text-color');
 		div.textContent = char;
 
 		const tooltip = document.createElement('span');
@@ -73,18 +135,30 @@ function Glyph(glyph = "E0") {
 	addClickEventToGlyphs();
 }
 
+function renderEmptyGrid() {
+	const fragment = document.createDocumentFragment();
+	const container = document.getElementById('glyph-output');
+
+	for (let i = 0; i < GRID * GRID; i++) {
+		const div = document.createElement('div');
+		div.classList.add('empty-cell');
+		fragment.appendChild(div);
+	}
+
+	container.innerHTML = '';
+	container.appendChild(fragment);
+}
+
 function initializeGlyph() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.innerHTML.trim() === '') {
-		Glyph("E0");
+		renderEmptyGrid();
 	}
 }
 
 function addClickEventToGlyphs() {
-	// Use event delegation for better performance
 	const glyphOutput = document.getElementById('glyph-output');
-	
-	// Remove existing listener to avoid duplicates
+
 	glyphOutput.removeEventListener('click', handleGlyphClick);
 	glyphOutput.addEventListener('click', handleGlyphClick);
 }
@@ -96,20 +170,25 @@ function handleGlyphClick(e) {
 		navigator.clipboard.writeText(char).then(() => {
 			showCopyNotification(div);
 		}).catch(() => {
-			// Clipboard API failed, fall back to showing a notification anyway
 			showCopyNotification(div);
 		});
 	}
 }
 
-// Glyph upload and processing
 function renderGlyphs() {
 	const glyphOutput = document.getElementById('glyph-output');
 	const glyphs = glyphOutput.querySelectorAll('div[data-hex]');
+	const glyphBg = getThemeValue('--glyph-cell-bg');
+	const glyphText = getThemeValue('--glyph-text-color');
+	const glyphTransparent = getThemeValue('--glyph-cell-transparent');
+	const tooltipBg = getThemeValue('--tooltip-bg');
+	const tooltipText = getThemeValue('--tooltip-text');
+	const copyBg = getThemeValue('--copy-bg');
+	const copyText = getThemeValue('--copy-text');
 
 	glyphs.forEach(glyph => {
-		glyph.style.backgroundColor = isDarkMode ? '#2a2a2a' : '#ffffff';
-		glyph.style.color = isDarkMode ? '#ffffff' : '#000000';
+		glyph.style.backgroundColor = glyphBg;
+		glyph.style.color = glyphText;
 
 		const backgroundImage = glyph.style.backgroundImage;
 		if (backgroundImage && backgroundImage !== 'none') {
@@ -127,10 +206,10 @@ function renderGlyphs() {
 				for (let i = 0; i < data.length; i += 4) {
 					if (data[i + 3] === 0) {
 						if (isDarkMode) {
-							data[i] = 50;
-							data[i + 1] = 50;
-							data[i + 2] = 50;
-							data[i + 3] = 128;
+							data[i] = 65;
+							data[i + 1] = 72;
+							data[i + 2] = 90;
+							data[i + 3] = 160;
 						} else {
 							data[i] = 200;
 							data[i + 1] = 200;
@@ -147,19 +226,19 @@ function renderGlyphs() {
 		}
 
 		if (glyph.classList.contains('transparent')) {
-			glyph.style.backgroundColor = isDarkMode ? 'rgba(50, 50, 50, 0.5)' : 'rgba(200, 200, 200, 0.25)';
+			glyph.style.backgroundColor = glyphTransparent;
 		}
 
 		const tooltip = glyph.querySelector('.tooltip');
 		if (tooltip) {
-			tooltip.style.backgroundColor = isDarkMode ? '#4a4a4a' : '#333';
-			tooltip.style.color = '#ffffff';
+			tooltip.style.backgroundColor = tooltipBg;
+			tooltip.style.color = tooltipText;
 		}
 
 		const copyNotification = glyph.querySelector('.copy-notification');
 		if (copyNotification) {
-			copyNotification.style.backgroundColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-			copyNotification.style.color = isDarkMode ? '#000000' : '#ffffff';
+			copyNotification.style.backgroundColor = copyBg;
+			copyNotification.style.color = copyText;
 		}
 	});
 }
@@ -174,7 +253,6 @@ function processGlyph(img, hexValue) {
 
 	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-	// Use DocumentFragment for better performance
 	const fragment = document.createDocumentFragment();
 	const startChar = parseInt(hexValue + "00", 16);
 
@@ -236,12 +314,10 @@ function processGlyph(img, hexValue) {
 	renderGlyphs();
 }
 
-// Normalize file name to handle suffixes like -1, -2, etc.
 function normalizeGlyphFileName(fileName) {
-	// Match patterns like glyph_E5.png, glyph_E5-1.png, glyph_E5-2.png, etc.
 	const regex = /^glyph_([0-9A-Fa-f]{2})(-\d+)?\.png$/i;
 	const match = fileName.match(regex);
-	
+
 	if (match) {
 		return {
 			isValid: true,
@@ -250,7 +326,7 @@ function normalizeGlyphFileName(fileName) {
 			hasSuffix: !!match[2]
 		};
 	}
-	
+
 	return {
 		isValid: false,
 		hexValue: null,
@@ -259,7 +335,6 @@ function normalizeGlyphFileName(fileName) {
 	};
 }
 
-// Zoom related functions
 function removeZoomEvents() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.zoomHandlers) {
@@ -363,9 +438,9 @@ function createZoomWindow(unicodeSize) {
 	zoomWindow.style.right = '20px';
 	zoomWindow.style.bottom = '20px';
 	zoomWindow.style.zIndex = '1000';
-	zoomWindow.style.background = 'white';
-	zoomWindow.style.border = '1px solid #ccc';
-	zoomWindow.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+	zoomWindow.style.background = getThemeValue('--zoom-bg');
+	zoomWindow.style.border = `1px solid ${getThemeValue('--zoom-border')}`;
+	zoomWindow.style.boxShadow = `0 0 10px ${getThemeValue('--shadow-color')}`;
 	zoomWindow.style.padding = '5px';
 	zoomWindow.style.display = 'none';
 
@@ -381,30 +456,59 @@ function createZoomWindow(unicodeSize) {
 	return zoomWindow;
 }
 
-// Event listeners
 window.onload = () => {
 	initializeGlyph();
+	applyTheme();
+	renderGlyphs();
 };
 
-document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+const shortcutsClose = document.getElementById('shortcutsClose');
+if (shortcutsClose) {
+	shortcutsClose.addEventListener('click', () => toggleShortcutsHint(false));
+}
+
+document.addEventListener('keydown', (event) => {
+	const tag = event.target?.tagName?.toLowerCase();
+	if (tag === 'input' || tag === 'textarea' || event.target?.isContentEditable) return;
+	const key = event.key.toLowerCase();
+	if (key === '?') {
+		toggleShortcutsHint();
+		return;
+	}
+	if (key === 'escape') {
+		toggleShortcutsHint(false);
+		return;
+	}
+	if (key === 'u') {
+		const { glyphUpload } = getUploadElements();
+		glyphUpload?.click();
+		return;
+	}
+	if (key === 'g') {
+		const glyphOutput = document.getElementById('glyph-output');
+		glyphOutput?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		return;
+	}
+	if (key === 'h') {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+});
 
 document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	const file = e.target.files[0];
 	if (!file) return;
 
-	const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
-	const glyphErrorMsg = document.getElementById('glyphErrorMsg');
-	
-	// Hide previous messages
-	glyphSuccessMsg.classList.add('d-none');
-	glyphErrorMsg.classList.add('d-none');
+	clearUploadMessages();
 
-	// Normalize file name to handle suffixes like -1, -2, etc.
+	if (!isPngFile(file)) {
+		setUploadError('Only PNG files are allowed. Please upload a valid PNG glyph file.');
+		return;
+	}
+
 	const normalized = normalizeGlyphFileName(file.name);
-	
+
 	if (!normalized.isValid) {
-		glyphErrorMsg.textContent = 'Invalid file name. Please use the format glyph_XX.png (e.g., glyph_E0.png) where XX is a hex value from 00 to FF. Suffixes like -1, -2 are also accepted.';
-		glyphErrorMsg.classList.remove('d-none');
+		setUploadError('Invalid file name. Please use the format glyph_XX.png (e.g., glyph_E0.png) where XX is a hex value from 00 to FF. Suffixes like -1, -2 are also accepted.');
 		return;
 	}
 
@@ -415,23 +519,60 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 		const img = new Image();
 		img.onload = function () {
 			processGlyph(img, hexValue);
-			glyphSuccessMsg.textContent = normalized.hasSuffix 
-				? `Glyph loaded successfully! (${file.name} → glyph_${hexValue}.png)` 
+			const { glyphSuccessMsg, uploadMeta } = getUploadElements();
+			glyphSuccessMsg.textContent = normalized.hasSuffix
+				? `Glyph loaded successfully! (${file.name} → glyph_${hexValue}.png)`
 				: 'Glyph loaded successfully!';
 			glyphSuccessMsg.classList.remove('d-none');
+			if (uploadMeta) {
+				uploadMeta.textContent = `${file.name} • ${formatFileSize(file.size)}`;
+				uploadMeta.classList.remove('d-none');
+			}
 		};
 		img.onerror = function () {
-			glyphErrorMsg.textContent = 'Failed to load image. Please ensure the file is a valid PNG image.';
-			glyphErrorMsg.classList.remove('d-none');
+			setUploadError('Failed to load image. Please ensure the file is a valid PNG image.');
 		};
 		img.src = event.target.result;
 	};
 	reader.onerror = function () {
-		glyphErrorMsg.textContent = 'Failed to read file. Please try again.';
-		glyphErrorMsg.classList.remove('d-none');
+		setUploadError('Failed to read file. Please try again.');
 	};
 	reader.readAsDataURL(file);
 });
+
+const uploadDropzone = document.getElementById('uploadDropzone');
+if (uploadDropzone) {
+	['dragenter', 'dragover'].forEach(eventName => {
+		uploadDropzone.addEventListener(eventName, (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			uploadDropzone.classList.add('drag-over');
+		});
+	});
+
+	['dragleave', 'drop'].forEach(eventName => {
+		uploadDropzone.addEventListener(eventName, (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			uploadDropzone.classList.remove('drag-over');
+		});
+	});
+
+	uploadDropzone.addEventListener('drop', (event) => {
+		const { glyphUpload } = getUploadElements();
+		const file = event.dataTransfer?.files?.[0];
+		if (!file) return;
+		if (!isPngFile(file)) {
+			setUploadError('Only PNG files are allowed. Please drop a valid PNG glyph file.');
+			return;
+		}
+
+		const dataTransfer = new DataTransfer();
+		dataTransfer.items.add(file);
+		glyphUpload.files = dataTransfer.files;
+		glyphUpload.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+}
 
 window.addEventListener('scroll', function () {
 	hideZoomWindow();
@@ -440,14 +581,14 @@ window.addEventListener('scroll', function () {
 	}
 });
 
-// Add CSS for zoom window
 const style = document.createElement('style');
 style.textContent = `
 	.zoom-window {
 		border-radius: 5px;
-		background: white;
+		background: var(--zoom-bg);
 		padding: 10px;
-		box-shadow: 0 0 15px rgba(0,0,0,0.2);
+		box-shadow: 0 0 15px var(--shadow-color);
+		border: 1px solid var(--zoom-border);
 	}
 
 	.zoom-window canvas {

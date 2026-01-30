@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Glyph Tools 🇻🇳</title>
+	<title>Glyph Tools</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 	<link href="styles.css" rel="stylesheet">
@@ -12,13 +12,28 @@
 </head>
 
 <body>
-	<div class="container py-5">
-		<header class="text-center mb-4">
-			<h1 class="display-4 fw-bold">Glyph Tools 🇻🇳</h1>
-			<p class="lead">Upload a font file and copy unicode characters</p>
+	<div class="container py-4">
+		<header class="mb-3">
+			<div class="header-bar">
+				<h1 class="display-4 fw-bold site-title">Glyph Tools</h1>
+				<p class="lead site-subtitle">Upload a font file and copy unicode characters</p>
+			</div>
+			<div id="shortcutsHint" class="shortcuts-hint d-none">
+				<div class="shortcuts-hint-header">
+					<span>Keyboard Shortcuts</span>
+					<button type="button" class="btn btn-sm btn-outline-primary" id="shortcutsClose">Close</button>
+				</div>
+				<ul>
+					<li><strong>U</strong> — Upload glyph</li>
+					<li><strong>G</strong> — Jump to glyph grid</li>
+					<li><strong>H</strong> — Jump to top</li>
+					<li><strong>?</strong> — Show/hide shortcuts</li>
+					<li><strong>Esc</strong> — Close shortcuts</li>
+				</ul>
+			</div>
 		</header>
 
-		<div class="row g-4 justify-content-center">
+		<div class="row g-3 justify-content-center">
 			<div class="col-md-8 col-lg-6">
 				<div class="card shadow-sm">
 					<div class="card-header bg-primary text-white">
@@ -28,9 +43,14 @@
 						<div class="mb-3">
 							<label for="glyphUpload" class="form-label">
 								<strong>Upload your glyph file</strong>
-								<span class="text-muted d-block">(PNG format, e.g., glyph_E0.png or glyph_E0-1.png)</span>
+								<span class="text-muted d-block">(PNG format, e.g., glyph_E0.png or
+									glyph_E0-1.png)</span>
 							</label>
-							<input type="file" class="form-control" id="glyphUpload" accept=".png">
+							<div id="uploadDropzone" class="upload-dropzone">
+								<input type="file" class="form-control" id="glyphUpload" accept="image/png">
+								<span class="upload-hint">Drag & drop your PNG here, or click to browse</span>
+							</div>
+							<div id="uploadMeta" class="upload-meta text-muted d-none"></div>
 						</div>
 
 						<div id="glyphSuccessMsg" class="alert alert-success alert-dismissible fade show d-none"
@@ -45,14 +65,11 @@
 			</div>
 		</div>
 
-		<div class="row mt-4">
+		<div class="row mt-3">
 			<div class="col-12">
 				<div class="card shadow-sm">
 					<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
 						<h5 class="h5 mb-0">Glyph Preview</h5>
-						<button id="darkModeToggle" class="btn btn-outline-light btn-sm">
-							<i class="fas fa-moon"></i> Toggle Dark Mode
-						</button>
 					</div>
 					<div class="card-body">
 						<p class="text-muted text-center mb-3">Click any glyph to copy its unicode character</p>
@@ -62,25 +79,17 @@
 			</div>
 		</div>
 
-		<footer class="container mt-5 mb-3">
+		<footer class="container mt-4 mb-3">
 			<div class="row justify-content-center">
 				<div class="col-md-8">
 					<div class="d-flex justify-content-center flex-wrap gap-3">
 						<a href="https://github.com/NhanAZ/glyph" class="text-decoration-none text-muted"
 							target="_blank" rel="noopener noreferrer">
-							<i class="fab fa-github me-2"></i>Contribute on GitHub
-						</a>
-						<a href="https://wiki.bedrock.dev/concepts/emojis.html" class="text-decoration-none text-muted"
-							target="_blank" rel="noopener noreferrer">
-							<i class="fas fa-book me-2"></i>Emojis & Symbols Docs
-						</a>
-						<a href="https://discord.gg/j2X83ujT6c" class="text-decoration-none text-muted" target="_blank"
-							rel="noopener noreferrer">
-							<i class="fab fa-discord me-2"></i>Join our Discord
+							<i class="fab fa-github me-2"></i>Original Site
 						</a>
 						<a href="https://github.com/NhanAZ" class="text-decoration-none text-muted" target="_blank"
 							rel="noopener noreferrer">
-							<i class="fas fa-user me-2"></i>Author's GitHub Profile
+							<i class="fas fa-user me-2"></i>GitHub Profile
 						</a>
 					</div>
 				</div>
